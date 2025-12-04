@@ -19,7 +19,6 @@ import com.gdn.faurihakim.cart.web.model.response.GetMemberCartWebResponse;
 import com.gdn.faurihakim.cart.web.model.response.UpdateCartItemWebResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -41,12 +40,13 @@ public class CartController {
         @Operation(summary = "Add products to cart")
         @PostMapping(value = "/carts/items", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
         public Response<AddProductToCartWebResponse> addProductToCart(
+                        @RequestHeader("X-User-Id") String memberId,
                         @RequestBody AddProductToCartWebRequest requestBody) {
-                log.info("Receive add products to cart API");
+                log.info("Receive add products to cart API for memberId: {}", memberId);
 
                 // Map web request to command request
                 AddProductToCartCommandRequest commandRequest = AddProductToCartCommandRequest.builder()
-                                .memberId(requestBody.getMemberId())
+                                .memberId(memberId)
                                 .products(requestBody.getProducts().stream()
                                                 .map(item -> AddProductToCartCommandRequest.ProductItem.builder()
                                                                 .productId(item.getProductId())
@@ -60,8 +60,8 @@ public class CartController {
         }
 
         @Operation(summary = "Get member cart")
-        @GetMapping(value = "/carts/member/{memberId}", produces = MediaType.APPLICATION_JSON_VALUE)
-        public Response<GetMemberCartWebResponse> getMemberCart(@PathVariable String memberId) {
+        @GetMapping(value = "/carts", produces = MediaType.APPLICATION_JSON_VALUE)
+        public Response<GetMemberCartWebResponse> getMemberCart(@RequestHeader("X-User-Id") String memberId) {
                 log.info("Receive get member cart API for memberId: {}", memberId);
 
                 GetMemberCartWebResponse response = executor.execute(
@@ -90,8 +90,8 @@ public class CartController {
         }
 
         @Operation(summary = "Delete member cart")
-        @DeleteMapping(value = "/carts/member/{memberId}", produces = MediaType.APPLICATION_JSON_VALUE)
-        public Response<DeleteCartWebResponse> deleteCart(@PathVariable String memberId) {
+        @DeleteMapping(value = "/carts", produces = MediaType.APPLICATION_JSON_VALUE)
+        public Response<DeleteCartWebResponse> deleteCart(@RequestHeader("X-User-Id") String memberId) {
                 log.info("Receive delete cart API for memberId: {}", memberId);
 
                 DeleteCartWebResponse response = executor.execute(

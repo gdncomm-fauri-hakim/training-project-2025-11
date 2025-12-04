@@ -12,7 +12,6 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AddProductToCartWebRequest {
-    private String memberId;
     private List<ProductItem> products;
 
     @Data

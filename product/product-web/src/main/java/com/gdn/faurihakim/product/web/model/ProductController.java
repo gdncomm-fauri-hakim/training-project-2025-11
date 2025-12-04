@@ -5,14 +5,17 @@ import com.blibli.oss.backend.common.helper.ResponseHelper;
 import com.blibli.oss.backend.common.model.response.Response;
 import com.gdn.faurihakim.product.command.CreateProductCommand;
 import com.gdn.faurihakim.product.command.GetProductCommand;
+import com.gdn.faurihakim.product.command.SearchProductCommand;
 import com.gdn.faurihakim.product.command.UpdateProductCommand;
 import com.gdn.faurihakim.product.command.model.CreateProductCommandRequest;
 import com.gdn.faurihakim.product.command.model.GetProductCommandRequest;
+import com.gdn.faurihakim.product.command.model.SearchProductCommandRequest;
 import com.gdn.faurihakim.product.command.model.UpdateProductCommandRequest;
 import com.gdn.faurihakim.product.web.model.request.CreateProductWebRequest;
 import com.gdn.faurihakim.product.web.model.request.UpdateProductWebRequest;
 import com.gdn.faurihakim.product.web.model.response.CreateProductWebResponse;
 import com.gdn.faurihakim.product.web.model.response.GetProductWebResponse;
+import com.gdn.faurihakim.product.web.model.response.SearchProductWebResponse;
 import com.gdn.faurihakim.product.web.model.response.UpdateProductWebResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
@@ -35,14 +38,32 @@ public class ProductController {
     @Autowired
     private CommandExecutor executor;
 
-    @Operation(summary = "Get product")
+    @Operation(summary = "Get products with pagination and search")
     @GetMapping(value = "/products", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Response<GetProductWebResponse> getProduct(String productId) {
-        log.info("Receive get product API");
+    public Response<SearchProductWebResponse> getProducts(
+            @RequestParam(required = false) String query,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        log.info("Receive get products API with query: {}, page: {}, size: {}", query, page, size);
+
+        SearchProductWebResponse response = executor.execute(
+                SearchProductCommand.class, SearchProductCommandRequest.builder()
+                        .query(query)
+                        .page(page)
+                        .size(size)
+                        .build());
+
+        return ResponseHelper.ok(response);
+    }
+
+    @Operation(summary = "Get product by product name")
+    @GetMapping(value = "/products-by-name", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Response<GetProductWebResponse> getProductByProductName(String productName) {
+        log.info("Receive get product API by product name");
 
         GetProductWebResponse response = executor.execute(
                 GetProductCommand.class, GetProductCommandRequest.builder()
-                        .productId(productId)
+                        .productName(productName)
                         .build());
 
         return ResponseHelper.ok(response);
@@ -57,6 +78,19 @@ public class ProductController {
         CreateProductCommandRequest commandRequest = new CreateProductCommandRequest();
         BeanUtils.copyProperties(requestBody, commandRequest);
         CreateProductWebResponse response = executor.execute(CreateProductCommand.class, commandRequest);
+        return ResponseHelper.ok(response);
+    }
+
+    @Operation(summary = "Get product by product id")
+    @GetMapping(value = "/products/{productId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Response<GetProductWebResponse> getProduct(@PathVariable String productId) {
+        log.info("Receive get product API");
+
+        GetProductWebResponse response = executor.execute(
+                GetProductCommand.class, GetProductCommandRequest.builder()
+                        .productId(productId)
+                        .build());
+
         return ResponseHelper.ok(response);
     }
 

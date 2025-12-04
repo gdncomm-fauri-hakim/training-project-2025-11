@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class GetMemberCommandRequest {
     private String memberId;
-    @NotBlank(message = "NotBlank")
     private String email;
     private String fullName;
     @Pattern(message = "MustValid", regexp = "^$|^08[0-9]{8,12}$")

@@ -11,4 +11,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class GetProductCommandRequest {
     private String productId;
+    private String productName;
 }
