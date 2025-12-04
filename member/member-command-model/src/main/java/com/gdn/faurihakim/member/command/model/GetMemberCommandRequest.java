@@ -1,6 +1,5 @@
 package com.gdn.faurihakim.member.command.model;
 
-import com.gdn.faurihakim.member.validation.MemberData;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
@@ -12,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class GetMemberCommandRequest implements MemberData {
+public class GetMemberCommandRequest {
     private String memberId;
     @NotBlank(message = "NotBlank")
     private String email;

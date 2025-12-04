@@ -18,8 +18,14 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @Slf4j
@@ -31,12 +37,12 @@ public class ProductController {
 
     @Operation(summary = "Get product")
     @GetMapping(value = "/products", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Response<GetProductWebResponse> getProduct(String productName) {
+    public Response<GetProductWebResponse> getProduct(String productId) {
         log.info("Receive get product API");
 
         GetProductWebResponse response = executor.execute(
                 GetProductCommand.class, GetProductCommandRequest.builder()
-                        .productName(productName)
+                        .productId(productId)
                         .build());
 
         return ResponseHelper.ok(response);
@@ -65,5 +71,32 @@ public class ProductController {
         commandRequest.setProductId(productId);
         UpdateProductWebResponse response = executor.execute(UpdateProductCommand.class, commandRequest);
         return ResponseHelper.ok(response);
+    }
+
+    @ExceptionHandler(ProductNotFoundException.class)
+    public ResponseEntity<Object> handleProductNotFound(ProductNotFoundException ex) {
+        log.error("Product not found: {}", ex.getMessage());
+        Map<String, Object> body = new HashMap<>();
+        body.put("error", "Product Not Found");
+        body.put("message", ex.getMessage());
+        body.put("timestamp", LocalDateTime.now().toString());
+        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Object> handleGeneralException(Exception ex) {
+        log.error("General exception caught: {} - Message: {}", ex.getClass().getName(), ex.getMessage());
+
+        // Attempt to unwrap if it's a wrapper exception
+        if (ex.getCause() instanceof ProductNotFoundException) {
+            return handleProductNotFound((ProductNotFoundException) ex.getCause());
+        }
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("error", "Internal Server Error");
+        body.put("message", ex.getMessage());
+        body.put("exception_type", ex.getClass().getName()); // For debugging
+        body.put("timestamp", LocalDateTime.now().toString());
+        return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
